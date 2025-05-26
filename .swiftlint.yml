@@ -1,0 +1,103 @@
+# SwiftLint Configuration for Seminote iOS
+# https://github.com/realm/SwiftLint
+
+# Paths to include during linting
+included:
+  - Seminote
+  - SeminoteTests
+
+# Paths to ignore during linting
+excluded:
+  - Carthage
+  - Pods
+  - .build
+  - DerivedData
+  - Package.swift
+
+# Disable rules
+disabled_rules:
+  - trailing_whitespace # Handled by editor
+  - todo # Allow TODO comments during development
+  - file_header # Disable file header requirement for now
+  - force_unwrapping # Allow force unwrapping in development
+
+# Opt-in rules (not enabled by default) - Keep it simple for now
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - first_where
+  - last_where
+  - reduce_into
+  - toggle_bool
+
+# Rule configurations
+line_length:
+  warning: 120
+  error: 150
+  ignores_function_declarations: true
+  ignores_comments: true
+  ignores_urls: true
+
+function_body_length:
+  warning: 50
+  error: 100
+
+function_parameter_count:
+  warning: 6
+  error: 8
+
+type_body_length:
+  warning: 300
+  error: 400
+
+file_length:
+  warning: 500
+  error: 1000
+  ignore_comment_only_lines: true
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+nesting:
+  type_level:
+    warning: 3
+    error: 6
+  statement_level:
+    warning: 5
+    error: 10
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 40
+    error: 60
+  excluded:
+    - id
+    - URL
+    - url
+    - x
+    - y
+    - z
+
+type_name:
+  min_length:
+    warning: 3
+    error: 2
+  max_length:
+    warning: 40
+    error: 50
+
+# Custom rules for Seminote project - Simplified for initial setup
+custom_rules:
+  # Ensure proper logging usage
+  logging_usage:
+    name: "Logging Usage"
+    regex: 'print\('
+    message: "Use Logger instead of print() for production code"
+    severity: warning
+
+# Reporter type
+reporter: "xcode"
