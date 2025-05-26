@@ -105,7 +105,7 @@ let package = Package(
         .testTarget(
             name: "SeminoteTests",
             dependencies: [
-                "Seminote",
+                // Note: Excluding "Seminote" app target to avoid @main symbol conflicts in tests
                 "SeminoteCore",
                 "SeminoteAudio",
                 "SeminoteML",

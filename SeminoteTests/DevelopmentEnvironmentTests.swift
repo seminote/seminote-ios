@@ -1,7 +1,7 @@
 import XCTest
 import AVFoundation
 import CoreML
-@testable import Seminote
+// Note: Cannot import Seminote app target due to @main symbol conflicts in Swift Package Manager tests
 @testable import SeminoteCore
 @testable import SeminoteAudio
 @testable import SeminoteML
