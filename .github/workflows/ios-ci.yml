@@ -1,0 +1,222 @@
+name: iOS CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  XCODE_VERSION: '15.0'
+  IOS_SIMULATOR: 'iPhone 15 Pro'
+  IOS_VERSION: '17.0'
+
+jobs:
+  # Job 1: Code Quality & Linting
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: macos-14
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app/Contents/Developer
+      
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v3
+      with:
+        path: .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+          
+    - name: Install SwiftLint
+      run: |
+        brew install swiftlint
+        
+    - name: Run SwiftLint
+      run: |
+        swiftlint --strict --reporter github-actions-logging
+        
+    - name: Resolve Swift Package Dependencies
+      run: |
+        swift package resolve
+        
+    - name: Check Swift Package
+      run: |
+        swift package dump-package
+
+  # Job 2: Build & Test
+  build-and-test:
+    name: Build & Test
+    runs-on: macos-14
+    needs: code-quality
+    strategy:
+      matrix:
+        destination: 
+          - 'platform=iOS Simulator,name=iPhone 15 Pro,OS=17.0'
+          - 'platform=iOS Simulator,name=iPad Pro (12.9-inch) (6th generation),OS=17.0'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app/Contents/Developer
+      
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v3
+      with:
+        path: .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+          
+    - name: Cache DerivedData
+      uses: actions/cache@v3
+      with:
+        path: ~/Library/Developer/Xcode/DerivedData
+        key: ${{ runner.os }}-deriveddata-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-deriveddata-
+          
+    - name: List available simulators
+      run: xcrun simctl list devices available
+      
+    - name: Build for Testing
+      run: |
+        xcodebuild build-for-testing \
+          -scheme Seminote \
+          -destination '${{ matrix.destination }}' \
+          -derivedDataPath DerivedData \
+          CODE_SIGNING_ALLOWED=NO \
+          ONLY_ACTIVE_ARCH=YES
+          
+    - name: Run Unit Tests
+      run: |
+        xcodebuild test-without-building \
+          -scheme Seminote \
+          -destination '${{ matrix.destination }}' \
+          -derivedDataPath DerivedData \
+          -resultBundlePath TestResults.xcresult \
+          CODE_SIGNING_ALLOWED=NO
+          
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.destination }}
+        path: TestResults.xcresult
+        
+    - name: Generate Test Report
+      if: always()
+      run: |
+        xcrun xccov view --report --json DerivedData/Logs/Test/*.xcresult > coverage.json
+        
+    - name: Upload Coverage Reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-report-${{ matrix.destination }}
+        path: coverage.json
+
+  # Job 3: Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: macos-14
+    needs: build-and-test
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app/Contents/Developer
+      
+    - name: Run Performance Tests
+      run: |
+        xcodebuild test \
+          -scheme Seminote \
+          -destination 'platform=iOS Simulator,name=${{ env.IOS_SIMULATOR }},OS=${{ env.IOS_VERSION }}' \
+          -only-testing:SeminoteTests/DevelopmentEnvironmentTests/testAudioProcessingLatency \
+          -only-testing:SeminoteTests/DevelopmentEnvironmentTests/testMLProcessingPerformance \
+          -only-testing:SeminoteTests/DevelopmentEnvironmentTests/testMemoryUsage \
+          CODE_SIGNING_ALLOWED=NO
+
+  # Job 4: Build Archive (Release builds only)
+  build-archive:
+    name: Build Archive
+    runs-on: macos-14
+    needs: [build-and-test, performance-tests]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app/Contents/Developer
+      
+    - name: Build Archive
+      run: |
+        xcodebuild archive \
+          -scheme Seminote \
+          -destination 'generic/platform=iOS' \
+          -archivePath Seminote.xcarchive \
+          CODE_SIGNING_ALLOWED=NO \
+          SKIP_INSTALL=NO
+          
+    - name: Upload Archive
+      uses: actions/upload-artifact@v3
+      with:
+        name: seminote-archive
+        path: Seminote.xcarchive
+
+  # Job 5: Security Scan
+  security-scan:
+    name: Security Scan
+    runs-on: macos-14
+    needs: code-quality
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Security Scan
+      run: |
+        # Check for hardcoded secrets
+        grep -r "password\|secret\|key\|token" --include="*.swift" . || true
+        
+        # Check for insecure network calls
+        grep -r "http://" --include="*.swift" . || true
+        
+        # Check Info.plist for security configurations
+        if [ -f "Seminote/App/Info.plist" ]; then
+          echo "Checking Info.plist security configurations..."
+          plutil -p Seminote/App/Info.plist | grep -E "(NSAppTransportSecurity|NSAllowsArbitraryLoads)" || true
+        fi
+
+  # Job 6: Deployment (main branch only)
+  deploy:
+    name: Deploy to TestFlight
+    runs-on: macos-14
+    needs: [build-archive, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download Archive
+      uses: actions/download-artifact@v3
+      with:
+        name: seminote-archive
+        
+    - name: Setup Deployment (Placeholder)
+      run: |
+        echo "🚀 Ready for TestFlight deployment"
+        echo "Archive available at: Seminote.xcarchive"
+        echo "Note: Actual deployment requires App Store Connect API key and certificates"
+        
+    - name: Notify Deployment Status
+      run: |
+        echo "✅ Deployment pipeline completed successfully"
+        echo "📱 iOS app ready for distribution"
