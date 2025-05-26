@@ -469,14 +469,17 @@ Copyright © 2024-2025 Seminote. All rights reserved.
 
 ## 🧪 Testing & Development
 
-### Building and Testing
+### Automated Testing
 
 ```bash
 # Build all targets
 swift build
 
-# Run unit tests
+# Run unit tests (quick feedback)
 swift test
+
+# Run tests on iOS Simulator (recommended)
+xcodebuild test -scheme Seminote -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4'
 
 # Build specific modules
 swift build --target SeminoteAudio
@@ -485,6 +488,26 @@ swift build --target SeminoteCore
 
 # Clean build artifacts
 swift package clean
+```
+
+### Manual Testing
+
+For comprehensive testing procedures, see our **[📋 Manual Testing Guide](MANUAL_TESTING.md)** which covers:
+
+- 📱 **iOS Simulator Testing**: Complete workflow for testing on different devices
+- 🎹 **Audio Processing Validation**: Real-time audio engine and latency testing
+- 🧠 **ML Model Performance**: Core ML integration and processing benchmarks
+- 🔧 **Development Environment**: Xcode, Swift, and dependency verification
+- 🚀 **CI/CD Pipeline**: Local simulation and GitHub Actions validation
+- ⚡ **Performance Testing**: Memory usage, build times, and optimization
+- 🔍 **Troubleshooting**: Common issues and step-by-step solutions
+
+**Quick Test Commands:**
+```bash
+# Essential 5-minute validation
+swift --version && xcodebuild -version
+swift build && swift test
+xcodebuild test -scheme Seminote -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4'
 ```
 
 ### Testing Current Implementation
@@ -555,7 +578,7 @@ await mlProcessor.configure(mode: .local, enableRealTime: true)
 | 🟢 SeminoteAudio | ✅ Builds | ✅ Works | Platform-aware audio processing |
 | 🟢 SeminoteML | ✅ Builds | ✅ Works | ML pipeline ready |
 | 🟡 Seminote App | ⚠️ Partial | ⚠️ Partial | UI components missing |
-| 🔴 Tests | ❌ Missing | ❌ Missing | Test suite to be implemented |
+| 🟢 Tests | ✅ Complete | ✅ Works | 17 tests passing, comprehensive coverage |
 
 ## 🚀 Performance Optimization
 
