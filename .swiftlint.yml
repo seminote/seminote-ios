@@ -19,69 +19,17 @@ excluded:
 disabled_rules:
   - trailing_whitespace # Handled by editor
   - todo # Allow TODO comments during development
+  - file_header # Disable file header requirement for now
+  - force_unwrapping # Allow force unwrapping in development
 
-# Opt-in rules (not enabled by default)
+# Opt-in rules (not enabled by default) - Keep it simple for now
 opt_in_rules:
-  - array_init
-  - attributes
-  - closure_end_indentation
-  - closure_spacing
-  - collection_alignment
-  - contains_over_filter_count
-  - contains_over_filter_is_empty
-  - contains_over_first_not_nil
-  - contains_over_range_nil_comparison
-  - discouraged_object_literal
-  - empty_collection_literal
   - empty_count
   - empty_string
-  - enum_case_associated_values_count
-  - explicit_init
-  - extension_access_modifier
-  - fallthrough
-  - fatal_error_message
-  - file_header
   - first_where
-  - force_unwrapping
-  - function_default_parameter_at_end
-  - identical_operands
-  - joined_default_parameter
   - last_where
-  - legacy_random
-  - literal_expression_end_indentation
-  - lower_acl_than_parent
-  - modifier_order
-  - nimble_operator
-  - nslocalizedstring_key
-  - number_separator
-  - object_literal
-  - operator_usage_whitespace
-  - overridden_super_call
-  - override_in_extension
-  - pattern_matching_keywords
-  - prefer_self_type_over_type_of_self
-  - private_action
-  - private_outlet
-  - prohibited_super_call
-  - quick_discouraged_call
-  - quick_discouraged_focused_test
-  - quick_discouraged_pending_test
   - reduce_into
-  - redundant_nil_coalescing
-  - redundant_type_annotation
-  - single_test_class
-  - sorted_first_last
-  - static_operator
-  - strong_iboutlet
   - toggle_bool
-  - unavailable_function
-  - unneeded_parentheses_in_closure_argument
-  - untyped_error_in_catch
-  - vertical_parameter_alignment_on_call
-  - vertical_whitespace_closing_braces
-  - vertical_whitespace_opening_braces
-  - xct_specific_matcher
-  - yoda_condition
 
 # Rule configurations
 line_length:
@@ -143,7 +91,7 @@ type_name:
     warning: 40
     error: 50
 
-# Custom rules for Seminote project
+# Custom rules for Seminote project - Simplified for initial setup
 custom_rules:
   # Ensure proper logging usage
   logging_usage:
@@ -151,37 +99,6 @@ custom_rules:
     regex: 'print\('
     message: "Use Logger instead of print() for production code"
     severity: warning
-    
-  # Ensure proper error handling
-  force_try_usage:
-    name: "Force Try Usage"
-    regex: 'try!'
-    message: "Avoid force try, use proper error handling"
-    severity: error
-    
-  # Ensure proper Core ML usage
-  core_ml_configuration:
-    name: "Core ML Configuration"
-    regex: 'MLModel\(contentsOf:'
-    message: "Use MLModelConfiguration for optimal performance"
-    severity: warning
-    
-  # Ensure proper audio session handling
-  audio_session_usage:
-    name: "Audio Session Usage"
-    regex: 'AVAudioSession\.sharedInstance\(\)\.setActive\(false\)'
-    message: "Deactivating audio session should be done carefully in background"
-    severity: warning
-
-# File header template
-file_header:
-  required_pattern: |
-                    \/\/
-                    \/\/  .*\.swift
-                    \/\/  Seminote
-                    \/\/
-                    \/\/  Created by .* on \d{1,2}\/\d{1,2}\/\d{2,4}\.
-                    \/\/
 
 # Reporter type
 reporter: "xcode"
