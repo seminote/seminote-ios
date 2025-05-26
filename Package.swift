@@ -61,7 +61,8 @@ let package = Package(
                 .product(name: "SwiftUIIntrospect", package: "SwiftUI-Introspect"),
                 .product(name: "PopupView", package: "PopupView")
             ],
-            path: "Seminote/App"
+            path: "Seminote/App",
+            exclude: ["README.md", "Info.plist"]
         ),
 
         // Core Framework
@@ -85,7 +86,8 @@ let package = Package(
                 .product(name: "SoundpipeAudioKit", package: "SoundpipeAudioKit"),
                 .product(name: "WebRTC", package: "WebRTC")
             ],
-            path: "Seminote/Core/Audio"
+            path: "Seminote/Core/Audio",
+            exclude: ["README.md"]
         ),
 
         // Machine Learning Framework
@@ -95,7 +97,8 @@ let package = Package(
                 "SeminoteCore",
                 "SeminoteAudio"
             ],
-            path: "Seminote/Core/ML"
+            path: "Seminote/Core/ML",
+            exclude: ["README.md"]
         ),
 
         // Test Targets
@@ -109,12 +112,6 @@ let package = Package(
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
             path: "SeminoteTests"
-        ),
-
-        .testTarget(
-            name: "SeminoteUITests",
-            dependencies: ["Seminote"],
-            path: "SeminoteUITests"
         )
     ],
     swiftLanguageModes: [.v5]

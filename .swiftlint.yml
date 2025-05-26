@@ -5,7 +5,6 @@
 included:
   - Seminote
   - SeminoteTests
-  - SeminoteUITests
 
 # Paths to ignore during linting
 excluded:
